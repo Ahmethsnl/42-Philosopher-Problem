@@ -46,24 +46,20 @@ int	ft_exit(char *str)
 	return (1);
 }
 
-int	mutex_init(t_data *data)
+int	ft_checknum(char *str)
 {
 	int	i;
 
 	i = 0;
-	data->forks = malloc(sizeof(pthread_mutex_t) * data->philo_n);
-	data->death = malloc(sizeof(pthread_mutex_t));
-	if (data->forks == 0 || data->death == 0)
+	if (str[0] == '+')
+		i++;
+	if (str[0] == '-')
+		i++;
+	while (str[i])
 	{
-		free(data);
-		free(data->philo);
-		return (ft_exit("Fork or Death allocate is failed(mutex_init)\n"));
-	}
-	while (i < data->philo_n)
-	{
-		pthread_mutex_init(&data->forks[i], NULL);
+		if (str[i] < '0' || str[i] > '9')
+			return (ft_exit("check arguments (checknum)\n"));
 		i++;
 	}
-	pthread_mutex_init(data->death, NULL);
 	return (SUCCESS);
 }

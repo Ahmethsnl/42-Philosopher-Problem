@@ -77,31 +77,22 @@ void	*simulation(void *philo)
 	return (SUCCESS);
 }
 
-int	data_init(t_data *data, int ac, char **av)
+int	monitor(t_data *data, t_time time)
 {
 	int	i;
 
-	i = 1;
-	data->ac = ac;
-	while (i < data->ac)
+	while (1)
 	{
-		if (ft_checknum(av[i]))
-			return (ERROR);
-		i++;
+		i = 0;
+		usleep(100);
+		pthread_mutex_lock(data->death);
+		time = ft_time() - data->philo->timer;
+		i = ft_death_check(data->philo, time);
+		if (i != -1)
+			return (0);
+		else if (data->ac == 6 && round_check(data))
+			return (0);
+		pthread_mutex_unlock(data->death);
 	}
-	data->philo_n = ft_atoi(av[1]);
-	data->death_timer = ft_atoi(av[2]);
-	data->meal_timer = ft_atoi(av[3]);
-	data->sleep_timer = ft_atoi(av[4]);
-	data->av = av;
-	if (data->philo_n <= 0 || data->death_timer <= 0 || data->sleep_timer <= 0
-		|| data->meal_timer <= 0)
-		return (ft_exit("invalid arguments(data_init)"));
-	data->philo = malloc(sizeof(t_philo) * data->philo_n);
-	if (data->philo == 0)
-	{
-		free(data);
-		return (ft_exit("Fail Allocate(data_init)"));
-	}
-	return (SUCCESS);
+	return (0);
 }

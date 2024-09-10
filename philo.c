@@ -12,20 +12,45 @@
 
 #include "philo.h"
 
-int	ft_checknum(char *str)
+int	round_check(t_data *data)
 {
 	int	i;
 
 	i = 0;
-	if (str[0] == '+')
-		i++;
-	if (str[0] == '-')
-		i++;
-	while (str[i])
+	while (i < data->philo_n)
 	{
-		if (str[i] < '0' || str[i] > '9')
-			return (ft_exit("check arguments (checknum)\n"));
+		if (data->philo[i].c_eat != data->round)
+			return (SUCCESS);
 		i++;
+	}
+	return (ERROR);
+}
+
+int	data_init(t_data *data, int ac, char **av)
+{
+	int	i;
+
+	i = 1;
+	data->ac = ac;
+	while (i < data->ac)
+	{
+		if (ft_checknum(av[i]))
+			return (ERROR);
+		i++;
+	}
+	data->philo_n = ft_atoi(av[1]);
+	data->death_timer = ft_atoi(av[2]);
+	data->meal_timer = ft_atoi(av[3]);
+	data->sleep_timer = ft_atoi(av[4]);
+	data->av = av;
+	if (data->philo_n <= 0 || data->death_timer <= 0 || data->sleep_timer <= 0
+		|| data->meal_timer <= 0)
+		return (ft_exit("invalid arguments(data_init)"));
+	data->philo = malloc(sizeof(t_philo) * data->philo_n);
+	if (data->philo == 0)
+	{
+		free(data);
+		return (ft_exit("Fail Allocate(data_init)"));
 	}
 	return (SUCCESS);
 }
@@ -52,38 +77,26 @@ int	philo_init(t_data *data)
 	return (SUCCESS);
 }
 
-int	round_check(t_data *data)
+int	mutex_init(t_data *data)
 {
 	int	i;
 
 	i = 0;
+	data->forks = malloc(sizeof(pthread_mutex_t) * data->philo_n);
+	data->death = malloc(sizeof(pthread_mutex_t));
+	if (data->forks == 0 || data->death == 0)
+	{
+		free(data);
+		free(data->philo);
+		return (ft_exit("Fork or Death allocate is failed(mutex_init)\n"));
+	}
 	while (i < data->philo_n)
 	{
-		if (data->philo[i].c_eat != data->round)
-			return (SUCCESS);
+		pthread_mutex_init(&data->forks[i], NULL);
 		i++;
 	}
-	return (ERROR);
-}
-
-int	monitor(t_data *data, t_time time)
-{
-	int	i;
-
-	while (1)
-	{
-		i = 0;
-		usleep(100);
-		pthread_mutex_lock(data->death);
-		time = ft_time() - data->philo->timer;
-		i = ft_death_check(data->philo, time);
-		if (i != -1)
-			return (0);
-		else if (data->ac == 6 && round_check(data))
-			return (0);
-		pthread_mutex_unlock(data->death);
-	}
-	return (0);
+	pthread_mutex_init(data->death, NULL);
+	return (SUCCESS);
 }
 
 int	main(int ac, char **av)
